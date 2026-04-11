@@ -21,7 +21,7 @@ jobs:
     name: Test (${{ matrix.os }})
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
       # Refresh stale runner apt metadata to avoid 404s when swiftly-action installs dependencies.
       - name: Update apt package index
@@ -30,7 +30,7 @@ jobs:
 
       - name: Set up Swift on Linux
         if: matrix.os == 'ubuntu-latest'
-        uses: vapor/swiftly-action@v0.2
+        uses: vapor/swiftly-action@bedb227456c5f495afbef80baebee17a8a02cef4 # v0.2
         with:
           toolchain: "6.2"
 
@@ -47,7 +47,7 @@ jobs:
     runs-on: macos-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
       # Use Xcode's toolchain (avoids Swift 6.2.1 standalone toolchain compiler bug)
       - name: Verify documentation
@@ -59,12 +59,12 @@ jobs:
     timeout-minutes: 15
     needs: test
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
       # macOS uses Xcode's toolchain (avoids Swift 6.2.1 standalone toolchain compiler bug)
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: "24"
 
@@ -78,7 +78,7 @@ jobs:
     timeout-minutes: 30
     steps:
       - name: Check out code
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
       - name: Install static SDK and build
         env:
           BUILD_FLAGS: ""
