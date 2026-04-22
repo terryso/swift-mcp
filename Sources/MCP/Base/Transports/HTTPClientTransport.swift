@@ -416,16 +416,10 @@ public actor HTTPClientTransport: Transport {
     /// - Processing different response types (JSON vs SSE)
     /// - Handling HTTP error codes according to the specification
     ///
-    /// ## Implementation Note
-    ///
-    /// This method signature differs from TypeScript and Python SDKs which receive
-    /// typed `JSONRPCMessage` objects instead of raw `Data`. Swift parses the JSON
-    /// internally to determine message type (request vs notification) for proper
-    /// content-type validation per the MCP spec.
-    ///
-    /// This design avoids breaking changes to the `Transport` protocol. A future
-    /// revision could consider changing the protocol to receive typed messages
-    /// for better alignment with other SDKs.
+    /// The `Transport` protocol hands this method raw `Data` to keep the protocol's
+    /// public surface small, so this method parses the JSON internally to determine
+    /// the message type (request vs notification). This is needed for content-type
+    /// validation per the MCP spec: only requests require it.
     ///
     /// - Parameters:
     ///   - data: The JSON-RPC message to send
@@ -839,11 +833,11 @@ public actor HTTPClientTransport: Transport {
                 throw MCPError.internalError("Access forbidden")
 
             case 404:
-                // If we get a 404 with a session ID, it means our session is invalid
-                // TODO: Consider Python's approach - send JSON-RPC error through stream
-                // with request ID (code -32600) before throwing. This gives pending requests
-                // proper error responses. Options: (1) catch in send() and yield error,
-                // (2) use RequestContext pattern like Python. Both are spec-compliant.
+                // Per spec (basic/transports §3-4): a 404 response to a request
+                // carrying a session ID means the server has terminated the session,
+                // and the client MUST start a new session with a fresh Initialize.
+                // Clearing sessionID and throwing MCPError.sessionExpired drives
+                // MCPClient's reconnect path, which performs the re-initialization.
                 if sessionID != nil {
                     logger.warning("Session has expired")
                     sessionID = nil
