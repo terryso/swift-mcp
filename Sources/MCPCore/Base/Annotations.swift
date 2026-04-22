@@ -12,12 +12,8 @@ public enum Role: String, Hashable, Codable, Sendable {
 
 /// Optional annotations for content, used to inform how objects are used or displayed.
 ///
-/// - SeeAlso: https://spec.modelcontextprotocol.io/specification/basic/
+/// - SeeAlso: https://modelcontextprotocol.io/specification/2025-11-25/basic/
 public struct Annotations: Hashable, Codable, Sendable {
-    // TODO: Deprecate in a future version
-    /// Backwards compatibility alias for top-level `Role`.
-    public typealias Role = MCPCore.Role
-
     /// Describes who the intended audience of this object or data is.
     /// It can include multiple entries to indicate content useful for multiple audiences.
     public var audience: [Role]?

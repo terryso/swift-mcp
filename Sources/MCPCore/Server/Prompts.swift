@@ -10,7 +10,7 @@ import Foundation
 /// Clients can discover available prompts, retrieve their contents,
 /// and provide arguments to customize them.
 ///
-/// - SeeAlso: https://spec.modelcontextprotocol.io/specification/server/prompts/
+/// - SeeAlso: https://modelcontextprotocol.io/specification/2025-11-25/server/prompts/
 public struct Prompt: Hashable, Codable, Sendable {
     /// The prompt name (intended for programmatic or logical use)
     public let name: String
@@ -69,38 +69,24 @@ public struct Prompt: Hashable, Codable, Sendable {
 
     /// A message in a prompt
     public struct Message: Hashable, Codable, Sendable {
-        // TODO: Deprecate in a future version
-        /// Backwards compatibility alias for top-level `Role`.
-        public typealias Role = MCPCore.Role
-
         /// The message role
         public let role: Role
         /// The message content
         public let content: ContentBlock
 
-        /// Creates a message with the specified role and content
-        @available(
-            *, deprecated, message: "Use static factory methods .user(_:) or .assistant(_:) instead"
-        )
-        public init(role: Role, content: ContentBlock) {
-            self.role = role
-            self.content = content
-        }
-
-        /// Private initializer for convenience methods to avoid deprecation warnings
-        private init(_role role: Role, _content content: ContentBlock) {
+        private init(role: Role, content: ContentBlock) {
             self.role = role
             self.content = content
         }
 
         /// Creates a user message with the specified content
         public static func user(_ content: ContentBlock) -> Message {
-            Message(_role: .user, _content: content)
+            Message(role: .user, content: content)
         }
 
         /// Creates an assistant message with the specified content
         public static func assistant(_ content: ContentBlock) -> Message {
-            Message(_role: .assistant, _content: content)
+            Message(role: .assistant, content: content)
         }
     }
 
@@ -140,7 +126,7 @@ public struct Prompt: Hashable, Codable, Sendable {
 // MARK: -
 
 /// To retrieve available prompts, clients send a `prompts/list` request.
-/// - SeeAlso: https://spec.modelcontextprotocol.io/specification/2024-11-05/server/prompts/#listing-prompts
+/// - SeeAlso: https://modelcontextprotocol.io/specification/2025-11-25/server/prompts/#listing-prompts
 public enum ListPrompts: Method {
     public static let name: String = "prompts/list"
 
@@ -206,7 +192,7 @@ public enum ListPrompts: Method {
 
 /// To retrieve a specific prompt, clients send a `prompts/get` request.
 /// Arguments may be auto-completed through the completion API.
-/// - SeeAlso: https://spec.modelcontextprotocol.io/specification/2024-11-05/server/prompts/#getting-a-prompt
+/// - SeeAlso: https://modelcontextprotocol.io/specification/2025-11-25/server/prompts/#getting-a-prompt
 public enum GetPrompt: Method {
     public static let name: String = "prompts/get"
 
@@ -270,7 +256,7 @@ public enum GetPrompt: Method {
 }
 
 /// When the list of available prompts changes, servers that declared the listChanged capability SHOULD send a notification.
-/// - SeeAlso: https://spec.modelcontextprotocol.io/specification/2024-11-05/server/prompts/#list-changed-notification
+/// - SeeAlso: https://modelcontextprotocol.io/specification/2025-11-25/server/prompts/#list-changed-notification
 public struct PromptListChangedNotification: Notification {
     public static let name: String = "notifications/prompts/list_changed"
 

@@ -91,23 +91,14 @@ let package = Package(
         .macro(
             name: "MCPMacros",
             dependencies: macroDependencies,
-            swiftSettings: [
-                .enableUpcomingFeature("StrictConcurrency"),
-            ],
         ),
         .target(
             name: "MCPCore",
             dependencies: mcpCoreTargetDependencies + ["MCPMacros"],
-            swiftSettings: [
-                .enableUpcomingFeature("StrictConcurrency"),
-            ],
         ),
         .target(
             name: "MCP",
             dependencies: mcpRuntimeTargetDependencies,
-            swiftSettings: [
-                .enableUpcomingFeature("StrictConcurrency"),
-            ],
         ),
         .target(
             name: "MCPTool",
@@ -117,16 +108,10 @@ let package = Package(
                 .product(name: "JSONSchema", package: "swift-json-schema"),
                 .product(name: "JSONSchemaBuilder", package: "swift-json-schema"),
             ],
-            swiftSettings: [
-                .enableUpcomingFeature("StrictConcurrency"),
-            ],
         ),
         .target(
             name: "MCPPrompt",
             dependencies: ["MCP", "MCPMacros"],
-            swiftSettings: [
-                .enableUpcomingFeature("StrictConcurrency"),
-            ],
         ),
         .testTarget(
             name: "MCPTests",
@@ -136,7 +121,10 @@ let package = Package(
             name: "MCPMacroTests",
             dependencies: [
                 "MCPMacros",
-                .product(name: "SwiftSyntaxMacrosTestSupport", package: "swift-syntax"),
+                .product(name: "SwiftSyntax", package: "swift-syntax"),
+                .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),
+                .product(name: "SwiftSyntaxMacroExpansion", package: "swift-syntax"),
+                .product(name: "SwiftSyntaxMacrosGenericTestSupport", package: "swift-syntax"),
             ],
         ),
     ],
