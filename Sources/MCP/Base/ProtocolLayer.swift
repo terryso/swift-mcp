@@ -112,6 +112,10 @@ package protocol ProtocolLayer: Actor {
     /// Default implementation logs a warning.
     func handleUnknownMessage(_ data: Data, context: MessageMetadata?) async
 
+    /// Collect in-flight handler tasks so the protocol layer can wait for them
+    /// before disconnecting the transport. Default returns empty.
+    func collectInFlightHandlerTasks() async -> [Task<Void, Never>]
+
     /// Handle an error response with null or missing `id`.
     ///
     /// Per the MCP schema, `id` is not required on `JSONRPCErrorResponse`. Such errors
@@ -467,6 +471,12 @@ package extension ProtocolLayer {
     /// shutdown path in `stopProtocol()`. This ensures `onClose` fires exactly once
     /// regardless of whether the close was graceful or unexpected, and prevents a
     /// subsequent `stop()` call from running cleanup a second time.
+    ///
+    /// Before disconnecting, waits for in-flight request handlers to complete so
+    /// that responses can be sent back to the client. This is important for stdio
+    /// transports where EOF on stdin does not mean stdout is closed — the server
+    /// can still write responses. A timeout prevents indefinite blocking if a
+    /// handler is stuck.
     private func handleMessageLoopEnded() async {
         guard case let .connected(transport) = protocolState.connectionState else { return }
 
@@ -484,7 +494,12 @@ package extension ProtocolLayer {
         }
         protocolState.pendingFlushTasks.removeAll()
 
-        // Notify the conformer about the unexpected closure (e.g., cancel in-flight handlers)
+        // Wait for in-flight request handlers to complete before disconnecting.
+        // This allows handlers to send their responses to the client.
+        // Conformers (e.g. Server) populate this via handleConnectionClosed().
+        await waitForInFlightHandlers(timeout: .seconds(5))
+
+        // Notify the conformer about the unexpected closure (e.g., cancel remaining in-flight handlers)
         await handleConnectionClosed()
 
         // Disconnect the transport and transition to .disconnected so that
@@ -493,6 +508,40 @@ package extension ProtocolLayer {
         await transport.disconnect()
         protocolState.connectionState = .disconnected
         await protocolState.onClose?()
+    }
+
+    /// Wait for in-flight request handler tasks to complete, with a timeout.
+    ///
+    /// This is called before disconnecting to give handlers a chance to send
+    /// their responses. The timeout prevents indefinite blocking.
+    ///
+    /// - Parameter timeout: Maximum duration to wait for handlers to complete.
+    private func waitForInFlightHandlers(timeout: Duration) async {
+        let handlerTasks = await collectInFlightHandlerTasks()
+        guard !handlerTasks.isEmpty else { return }
+
+        protocolLogger?.debug(
+            "Waiting for \(handlerTasks.count) in-flight handler(s) to complete",
+            metadata: ["timeout": "\(timeout)"]
+        )
+
+        await withTaskGroup(of: Void.self) { group in
+            for task in handlerTasks {
+                group.addTask { await task.value }
+            }
+            group.addTask {
+                try? await Task.sleep(for: timeout)
+            }
+            // Wait for the first to finish (either all handlers or timeout)
+            _ = await group.next()
+            group.cancelAll()
+        }
+    }
+
+    /// Collect in-flight handler tasks from the conformer.
+    /// Default implementation returns empty (for Client which has no in-flight handlers).
+    func collectInFlightHandlerTasks() async -> [Task<Void, Never>] {
+        []
     }
 
     // MARK: Sending Messages

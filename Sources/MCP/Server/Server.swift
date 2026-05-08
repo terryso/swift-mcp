@@ -730,10 +730,17 @@ public actor Server: ProtocolLayer {
             handlerTask.cancel()
             protocolLogger?.debug(
                 "Cancelled in-flight request on disconnect",
-                metadata: ["id": "\(requestId)"],
+                metadata: ["id": "\(requestId)"]
             )
         }
         registeredHandlers.inFlightHandlerTasks.removeAll()
+    }
+
+    /// Collect in-flight handler tasks for graceful shutdown.
+    /// Returns all currently running request handler Tasks so the protocol layer
+    /// can wait for them to complete before disconnecting the transport.
+    package func collectInFlightHandlerTasks() async -> [Task<Void, Never>] {
+        Array(registeredHandlers.inFlightHandlerTasks.values)
     }
 
     /// Handle unknown/malformed messages by sending error responses.
