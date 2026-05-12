@@ -21,8 +21,8 @@ import Network
     func receive(
         minimumIncompleteLength: Int, maximumLength: Int,
         completion: @escaping @Sendable (
-            Data?, NWConnection.ContentContext?, Bool, NWError?,
-        ) -> Void,
+            Data?, NWConnection.ContentContext?, Bool, NWError?
+        ) -> Void
     )
 }
 
