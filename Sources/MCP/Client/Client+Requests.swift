@@ -359,7 +359,7 @@ public extension Client {
         /// The actual sending happens when the `withBatch` scope completes.
         /// - Returns: A `Task` that will eventually produce the result or throw an error.
         public func addRequest<M: MCPCore.Method>(_ request: Request<M>) async throws -> Task<
-            M.Result, Swift.Error,
+            M.Result, Swift.Error
         > {
             try requests.append(AnyRequest(request))
 
